@@ -1,0 +1,24 @@
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+.venv/
+env/
+venv/
+
+# Logs & Temporary Data
+*.log
+*.csv
+!results/data/*.csv
+*.cnf
+.DS_Store
+
+# Tool Config
+.antigravity/
+
+# Assignment PDF Documents
+Assignment 2 - requirements.pdf
+Bandwidth Minimization Problem - BMP.pdf
+Mau xay dung bao cao BTL so 1 và BTL so 2.pdf
