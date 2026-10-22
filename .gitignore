@@ -18,7 +18,6 @@ venv/
 # Tool Config
 .antigravity/
 
-# Assignment PDF Documents
-Assignment 2 - requirements.pdf
-Bandwidth Minimization Problem - BMP.pdf
-Mau xay dung bao cao BTL so 1 và BTL so 2.pdf
+# Local notes and reference documents (in every directory)
+*.md
+*.pdf
