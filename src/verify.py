@@ -1,4 +1,4 @@
-"""Independently check BMP solutions returned by any SAT, CP, or MIP solver."""
+"""Kiểm tra độc lập nghiệm BMP do SAT, CP hoặc MIP trả về."""
 
 from __future__ import annotations
 
@@ -8,39 +8,44 @@ from .graph import Graph
 
 
 def validate_positions(graph: Graph, positions: Sequence[int] | Mapping[int, int]) -> tuple[int, ...]:
-    """Validate a 1-based vertex-to-position permutation.
+    """Kiểm tra đầu vào có gán mỗi đỉnh vào đúng một vị trí hay không.
 
-    For a sequence, element ``positions[v - 1]`` is the position of vertex
-    ``v``. A mapping instead uses vertex IDs as keys. In both cases positions
-    must be exactly ``1..graph.n`` with no repetitions. This is *not* a list
-    of vertices in their left-to-right order.
+    Nếu truyền tuple/list, ``positions[v - 1]`` là vị trí của đỉnh ``v``.
+    Nếu truyền dict, dùng dạng ``{mã_đỉnh: vị_trí}``. Các vị trí phải là
+    hoán vị của 1..n. Đây KHÔNG phải danh sách mã đỉnh từ trái sang phải.
     """
     if isinstance(positions, Mapping):
+        # Dict phải có đủ và chỉ có các khóa 1, 2, ..., n.
         expected_vertices = set(range(1, graph.n + 1))
         if any(type(vertex) is not int for vertex in positions) or set(positions) != expected_vertices:
-            raise ValueError(f"vertex keys must be exactly 1..{graph.n}")
+            raise ValueError(f"các khóa mã đỉnh phải đúng bằng 1..{graph.n}")
+        # Đưa dict về tuple để phần tính bandwidth chỉ cần xử lý một kiểu dữ liệu.
         permutation = tuple(positions[vertex] for vertex in range(1, graph.n + 1))
     else:
         if isinstance(positions, (str, bytes)):
-            raise TypeError("positions must be a sequence of integers or a vertex-to-position mapping")
+            raise TypeError("positions phải là dãy số nguyên hoặc dict mã đỉnh → vị trí")
         permutation = tuple(positions)
 
     if len(permutation) != graph.n:
-        raise ValueError(f"expected {graph.n} positions, found {len(permutation)}")
+        raise ValueError(f"cần {graph.n} vị trí, thực tế có {len(permutation)}")
+    # bool là kiểu con của int trong Python, nên dùng type(...) is int để loại True/False.
     if any(type(position) is not int for position in permutation):
-        raise ValueError("all positions must be integers (Boolean values are not positions)")
+        raise ValueError("mọi vị trí phải là số nguyên; True/False không phải vị trí")
+    # Set đủ 1..n cộng với độ dài n đồng nghĩa không có vị trí bị thiếu hoặc lặp.
     if set(permutation) != set(range(1, graph.n + 1)):
-        raise ValueError(f"positions must be a permutation of 1..{graph.n}")
+        raise ValueError(f"các vị trí phải là một hoán vị của 1..{graph.n}")
     return permutation
 
 
 def compute_bandwidth(graph: Graph, positions: Sequence[int] | Mapping[int, int]) -> int:
-    """Return ``max(abs(pos[u] - pos[v]))`` over all graph edges.
+    """Tính khoảng cách vị trí lớn nhất giữa hai đầu của mọi cạnh.
 
-    An edgeless graph has bandwidth 0. The permutation is validated before
-    any edge is evaluated, including when the graph has no edges.
+    Công thức: ``max(|positions[u-1] - positions[v-1]|)`` với (u,v) là cạnh.
+    Vẫn kiểm tra hoán vị trước, kể cả khi đồ thị không có cạnh. Khi không có
+    cạnh, quy ước bandwidth bằng 0.
     """
     permutation = validate_positions(graph, positions)
+    # default=0 xử lý trường hợp graph.edges rỗng, tránh max() báo lỗi.
     return max((abs(permutation[u - 1] - permutation[v - 1]) for u, v in graph.edges), default=0)
 
 
@@ -49,15 +54,16 @@ def verify_solution(
     positions: Sequence[int] | Mapping[int, int],
     claimed_bandwidth: int | None = None,
 ) -> int:
-    """Check the permutation and optional solver claim; return actual bandwidth.
+    """Tự tính bandwidth và đối chiếu với số solver công bố (nếu có).
 
-    Raises :class:`ValueError` for an invalid permutation or a claim that does
-    not equal the independently computed bandwidth.
+    Hàm trả bandwidth tính lại. Hoán vị sai hoặc giá trị công bố không khớp
+    sẽ gây ValueError. Việc này chưa chứng minh nghiệm là tối ưu.
     """
     actual = compute_bandwidth(graph, positions)
     if claimed_bandwidth is not None:
+        # Chỉ so sánh sau khi chắc chắn số solver báo là số nguyên không âm.
         if type(claimed_bandwidth) is not int or claimed_bandwidth < 0:
-            raise ValueError("claimed_bandwidth must be a nonnegative integer")
+            raise ValueError("bandwidth được công bố phải là số nguyên không âm")
         if actual != claimed_bandwidth:
-            raise ValueError(f"claimed bandwidth {claimed_bandwidth} differs from actual {actual}")
+            raise ValueError(f"bandwidth công bố {claimed_bandwidth} khác giá trị tính lại {actual}")
     return actual
