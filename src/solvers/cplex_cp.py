@@ -8,7 +8,9 @@ from pathlib import Path
 from time import perf_counter
 
 from ..graph import Graph
-from .common import SolverResult, check_options, finite_lower_bound, make_result
+from ..graph_bounds import compute_graph_bounds
+from .common import (PhaseCallback, SolverResult, check_options, finite_lower_bound,
+                     make_result, remaining_solve_time)
 
 
 def _find_cp_optimizer() -> Path | None:
@@ -34,35 +36,46 @@ def _find_cp_optimizer() -> Path | None:
     return None
 
 
-def solve_cplex_cp(graph: Graph, time_limit: float | None = None, workers: int = 1) -> SolverResult:
+def solve_cplex_cp(graph: Graph, time_limit: float | None = None, workers: int = 1,
+                   on_phase: PhaseCallback | None = None) -> SolverResult:
     """Dùng biến vị trí nguyên, AllDifferent và trị tuyệt đối trên mỗi cạnh.
 
     ``docplex`` là thư viện mô hình; để solve còn cần chương trình CP
     Optimizer thuộc IBM ILOG CPLEX Optimization Studio.
     """
     check_options(time_limit, workers)
+    run_start = perf_counter()
     try:
         from docplex.cp.model import CpoModel
     except ImportError as exc:
         raise RuntimeError("Cần cài docplex: python -m pip install docplex") from exc
 
     build_start = perf_counter()
+    graph_bound = compute_graph_bounds(graph).strongest
     model = CpoModel(name=f"bmp_{graph.name}")
     position = [model.integer_var(min=1, max=graph.n, name=f"p_{v}") for v in range(1, graph.n + 1)]
     model.add(model.all_diff(position))
-    bandwidth = model.integer_var(min=0, max=graph.n - 1, name="bandwidth")
+    bandwidth = model.integer_var(min=graph_bound, max=graph.n - 1, name="bandwidth")
     for u, v in graph.edges:
         model.add(model.abs(position[u - 1] - position[v - 1]) <= bandwidth)
     model.add(model.minimize(bandwidth))
     build_seconds = perf_counter() - build_start
+    if on_phase is not None:
+        on_phase("build_end", build_seconds)
+
+    remaining = remaining_solve_time(time_limit, run_start)
+    if remaining == 0:
+        return make_result(graph, "cplex_cp", "TIMEOUT", None, None, build_seconds, 0.0)
 
     options: dict[str, object] = {"Workers": workers, "LogVerbosity": "Quiet"}
-    if time_limit is not None:
-        options["TimeLimit"] = time_limit
+    if remaining is not None:
+        options["TimeLimit"] = remaining
     optimizer = _find_cp_optimizer()
     if optimizer is not None:
         # DOcplex nhận tên thuộc tính lá của context ngay trong solve().
         options["execfile"] = str(optimizer)
+    if on_phase is not None:
+        on_phase("solve_start", 0.0)
     solve_start = perf_counter()
     try:
         solution = model.solve(**options)

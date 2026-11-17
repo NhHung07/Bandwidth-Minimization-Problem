@@ -4,13 +4,24 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import isfinite
-from typing import Literal, Sequence
+from typing import Callable, Literal, Sequence
+from time import perf_counter
 
 from ..graph import Graph
+from ..graph_bounds import compute_graph_bounds
 from ..verify import verify_solution
 
 
 SolverStatus = Literal["OPTIMAL", "FEASIBLE", "TIMEOUT"]
+PhaseCallback = Callable[[str, float], None]
+
+
+def remaining_solve_time(time_limit: float | None, started_at: float,
+                         reserve: float = 1.0) -> float | None:
+    """Thời gian còn lại sau khi dựng mô hình, chừa chỗ trả/kiểm nghiệm."""
+    if time_limit is None:
+        return None
+    return max(0.0, time_limit - (perf_counter() - started_at) - reserve)
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,6 +40,7 @@ class SolverResult:
     lower_bound: float | None
     build_seconds: float
     solve_seconds: float
+    native_lower_bound: float | None = None
 
     @property
     def total_seconds(self) -> float:
@@ -55,10 +67,13 @@ def make_result(
     objective: float | None = None,
 ) -> SolverResult:
     """Kiểm lại nghiệm từ solver trước khi trả kết quả cho benchmark."""
+    native_bound = finite_lower_bound(lower_bound, graph.n)
+    graph_bound = compute_graph_bounds(graph).strongest
+    lower_bound = max(float(graph_bound), native_bound if native_bound is not None else 0.0)
     if positions is None:
         if status != "TIMEOUT":
             raise RuntimeError(f"{method} báo {status} nhưng không có nghiệm")
-        return SolverResult(method, status, None, None, lower_bound, build_seconds, solve_seconds)
+        return SolverResult(method, status, None, None, lower_bound, build_seconds, solve_seconds, native_bound)
 
     # MIP trả số thực cho biến nguyên; chỉ làm tròn sai số số học rất nhỏ.
     if any(not isfinite(value) or abs(value - round(value)) > 1e-5 for value in positions):
@@ -73,9 +88,13 @@ def make_result(
     elif status != "FEASIBLE":
         raise RuntimeError(f"{method} có nghiệm nhưng báo trạng thái {status}")
 
-    if lower_bound is not None and (not isfinite(lower_bound) or lower_bound > bandwidth + 1e-5):
+    if lower_bound > bandwidth + 1e-5:
         raise RuntimeError(f"{method} trả cận dưới không hợp lệ")
-    return SolverResult(method, status, permutation, bandwidth, lower_bound, build_seconds, solve_seconds)
+    if bandwidth - lower_bound <= 1e-5:
+        status = "OPTIMAL"
+        lower_bound = float(bandwidth)
+    return SolverResult(method, status, permutation, bandwidth, lower_bound,
+                        build_seconds, solve_seconds, native_bound)
 
 
 def finite_lower_bound(value: float | None, n: int) -> float | None:

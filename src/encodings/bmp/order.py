@@ -51,7 +51,7 @@ def encode_order(graph: Graph, k: int) -> OrderEncoding:
         # Mọi đỉnh đều có vị trí <= n. Tính đơn điệu buộc chuỗi chỉ đổi False -> True.
         clauses.append((_threshold_id(n, vertex, n),))
         for p in range(1, n):
-            clauses.append((-_threshold_id(n, vertex, p), _threshold_id(n, vertex, p + 1)))
+            clauses.append((-_threshold_id(n, vertex, p), _threshold_id(n, vertex, p + 1))) # nếu tại p đã True thì tại p+1 cũng True:
 
     # Đỉnh v ở đúng vị trí p khi t[v,p] đúng và t[v,p-1] sai.
     # Cấm hai đỉnh cùng chuyển trạng thái tại p. Có n đỉnh và n vị trí,

@@ -11,12 +11,16 @@ from ..verify import verify_solution
 from .common import EncodingName, SearchResult, ThresholdTrial, build_encoding, decode_model, initial_upper_bound
 
 
+PhaseCallback = Callable[[str, int, float, int | None, int | None], None]
+
+
 def optimize_repeated(
     graph: Graph,
     encoding: EncodingName = "pairwise",
     on_trial: Callable[[ThresholdTrial, tuple[int, ...] | None], None] | None = None,
     *,
     cardinality: CardinalityName = "binomial",
+    on_phase: PhaseCallback | None = None,
 ) -> SearchResult:
     """Giảm k từ cận trên khả thi đến lần UNSAT đầu tiên.
 
@@ -34,10 +38,15 @@ def optimize_repeated(
     best_k: int | None = None
 
     for k in range(initial_k, -1, -1):
+        if on_phase is not None:
+            on_phase("build_start", k, 0.0, None, None)
         build_start = perf_counter()
         decision = build_encoding(graph, k, encoding, cardinality)
         with Solver(name="g3", bootstrap_with=decision.clauses) as solver:
             build_seconds = perf_counter() - build_start
+            if on_phase is not None:
+                on_phase("build_end", k, build_seconds, decision.num_vars, len(decision.clauses))
+                on_phase("solve_start", k, 0.0, None, None)
             solve_start = perf_counter()
             satisfiable = solver.solve()
             solve_seconds = perf_counter() - solve_start
