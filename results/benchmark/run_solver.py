@@ -7,8 +7,8 @@ import sys
 from pathlib import Path
 
 
-# Khi chạy trực tiếp file scripts/run_solver.py, cần thêm gốc dự án cho import.
-ROOT = Path(__file__).resolve().parents[1]
+# Khi chạy trực tiếp file results/benchmark/run_solver.py, cần thêm gốc dự án cho import.
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 # Đổi dòng này nếu muốn nút Run Python File chạy một instance thật khác.

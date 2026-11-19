@@ -9,10 +9,10 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from scripts.benchmark_group3 import FIELDS, METHODS
+from results.benchmark.benchmark_group3 import FIELDS, METHODS
 from src.graph import list_instance_paths, load_graph
 from src.graph_bounds import compute_graph_bounds
 

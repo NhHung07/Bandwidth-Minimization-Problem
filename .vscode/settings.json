@@ -1,3 +1,46 @@
 {
-    "python-envs.defaultEnvManager": "ms-python.python:system"
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "latex-workshop.latex.autoBuild.run": "onSave",
+    "latex-workshop.latex.build.enableMagicComments": false,
+    "latex-workshop.latex.recipe.default": "first",
+    "latex-workshop.latex.recipes": [
+        {
+            "name": "XeLaTeX (2 passes)",
+            "tools": [
+                "xelatex-report",
+                "xelatex-report"
+            ]
+        }
+    ],
+    "latex-workshop.latex.tools": [
+        {
+            "name": "xelatex-report",
+            "command": "xelatex",
+            "args": [
+                "-synctex=1",
+                "-interaction=nonstopmode",
+                "-halt-on-error",
+                "-file-line-error",
+                "-output-directory=%OUTDIR%",
+                "%DOC%"
+            ],
+            "cwd": "%DIR%"
+        }
+    ],
+    "latex-workshop.latex.outDir": "%DIR%",
+    "latex-workshop.view.pdf.viewer": "tab",
+    "latex-workshop.latex.autoClean.run": "onSucceeded",
+    "latex-workshop.latex.clean.method": "glob",
+    "latex-workshop.latex.clean.fileTypes": [
+        "%DOCFILE%.aux",
+        "%DOCFILE%.abs",
+        "%DOCFILE%.log",
+        "%DOCFILE%.out",
+        "%DOCFILE%.toc",
+        "%DOCFILE%.lof",
+        "%DOCFILE%.lot",
+        "%DOCFILE%.fls",
+        "%DOCFILE%.fdb_latexmk",
+        "%DOCFILE%.synctex.gz"
+    ]
 }

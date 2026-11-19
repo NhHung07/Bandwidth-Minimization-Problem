@@ -14,10 +14,10 @@ from time import sleep
 import psutil
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from scripts.benchmark_group1 import CONFIGURATIONS, FIELDS
+from results.benchmark.benchmark_group1 import CONFIGURATIONS, FIELDS
 from src.graph import list_instance_paths, load_graph
 
 

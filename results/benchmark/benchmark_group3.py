@@ -15,10 +15,10 @@ from importlib.metadata import version
 from pathlib import Path
 from time import perf_counter
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from scripts.benchmark_sat import read_events, stop_tree, tree_rss
+from results.benchmark.benchmark_sat import read_events, stop_tree, tree_rss
 from src.graph import list_instance_paths, load_graph
 from src.graph_bounds import compute_graph_bounds
 from src.verify import verify_solution
@@ -44,7 +44,7 @@ def run_case(path: Path, method: tuple[str, str], time_limit: float,
         events_path = Path(folder) / "events.jsonl"
         started_at = perf_counter()
         deadline = started_at + time_limit
-        command = [sys.executable, str(ROOT / "scripts" / "benchmark_group3_worker.py"),
+        command = [sys.executable, str(ROOT / "results" / "benchmark" / "benchmark_group3_worker.py"),
                    str(path), key, str(deadline), str(events_path)]
         process = subprocess.Popen(
             command, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
@@ -159,7 +159,7 @@ def run_case(path: Path, method: tuple[str, str], time_limit: float,
 def code_hash() -> str:
     digest = hashlib.sha256()
     sources = sorted((ROOT / "src").rglob("*.py"))
-    sources += [ROOT / "scripts" / name for name in
+    sources += [ROOT / "results" / "benchmark" / name for name in
                 ("benchmark_sat.py", "benchmark_group3.py", "benchmark_group3_worker.py")]
     for path in sources:
         digest.update(path.relative_to(ROOT).as_posix().encode())

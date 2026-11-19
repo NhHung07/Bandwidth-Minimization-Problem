@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from time import perf_counter
-from typing import Callable
+from typing import Callable, Iterator
 
 from ..graph import Graph
 from ..graph_bounds import compute_graph_bounds
@@ -13,6 +14,35 @@ from .common import EncodingName, SearchResult, ThresholdTrial, build_encoding, 
 
 
 PhaseCallback = Callable[[str, int, float, int | None, int | None], None]
+
+
+def _new_bandwidth_clauses(
+    graph: Graph, k: int, encoding: EncodingName,
+) -> Iterator[tuple[int, int]]:
+    """Chỉ sinh phần bổ sung khi giảm ngưỡng từ k+1 xuống k.
+
+    Không sinh lại ràng buộc hoán vị hoặc cấp phát lại biến phụ AMO.
+    Thứ tự clause trùng với thứ tự lọc từ công thức đầy đủ trước đây.
+    """
+    n = graph.n
+    if encoding == "pairwise":
+        # Các khoảng cách > k+1 đã bị cấm; chỉ khoảng cách k+1 là mới.
+        distance = k + 1
+        for u, v in graph.edges:
+            u_base, v_base = (u - 1) * n, (v - 1) * n
+            for p in range(1, n + 1):
+                if p > distance:
+                    yield (-(u_base + p), -(v_base + p - distance))
+                if p + distance <= n:
+                    yield (-(u_base + p), -(v_base + p + distance))
+    else:
+        # Với Order, mệnh đề cạnh ở ngưỡng k có literal khác ngưỡng cũ.
+        # Giữ các ngưỡng cũ và thêm phần cạnh mới vẫn tương đương F_k.
+        for u, v in graph.edges:
+            u_base, v_base = (u - 1) * n, (v - 1) * n
+            for p in range(1, n - k + 1):
+                yield (-(u_base + p), v_base + p + k)
+                yield (-(v_base + p), u_base + p + k)
 
 
 def optimize_incremental(
@@ -26,8 +56,8 @@ def optimize_incremental(
 ) -> SearchResult:
     """Giữ một solver rồi siết k giảm dần đến lần UNSAT đầu tiên.
 
-    Mỗi công thức ở k nhỏ hơn là điều kiện mạnh hơn về mặt logic. Chỉ nạp
-    các clause chưa có; solver giữ các clause cũ và clause đã học.
+    Chỉ dựng CNF đầy đủ ở ngưỡng đầu tiên. Các bước sau sinh trực tiếp
+    phần clause mới; solver giữ các clause cũ và clause đã học.
     Với order, clause ở k cũ có thể khác chữ với clause ở k mới nhưng là
     hệ quả của ngưỡng chặt hơn, nên giữ lại vẫn đúng.
     """
@@ -48,17 +78,20 @@ def optimize_incremental(
     if on_phase is not None:
         on_phase("build_start", initial_k, 0.0, None, None)
     build_start = perf_counter()
-    # Biến phụ của AMO có ID cố định theo thứ tự hàng/cột, độc lập với k.
+    # Ràng buộc hoán vị và biến phụ AMO chỉ được tạo một lần.
     decision = build_encoding(graph, initial_k, encoding, cardinality)
-    seen_clauses = set(decision.clauses)
+    # Giữ cách đếm clause phân biệt như trước, không giữ set trong vòng lặp.
+    num_clauses = len(set(decision.clauses))
     trials: list[ThresholdTrial] = []
     best_positions: tuple[int, ...] | None = None
     best_k: int | None = None
 
     with Solver(name="g3", bootstrap_with=decision.clauses) as solver:
+        # Solver đã giữ CNF. Giải phóng bản Python, chỉ giữ metadata giải mã.
+        decision = replace(decision, clauses=())
         first_build_seconds = perf_counter() - build_start
         if on_phase is not None:
-            on_phase("build_end", initial_k, first_build_seconds, decision.num_vars, len(seen_clauses))
+            on_phase("build_end", initial_k, first_build_seconds, decision.num_vars, num_clauses)
         for k in range(initial_k, min_k - 1, -1):
             if k == initial_k:
                 build_seconds = first_build_seconds
@@ -66,13 +99,15 @@ def optimize_incremental(
                 if on_phase is not None:
                     on_phase("build_start", k, 0.0, None, None)
                 build_start = perf_counter()
-                decision = build_encoding(graph, k, encoding, cardinality)
-                new_clauses = tuple(clause for clause in decision.clauses if clause not in seen_clauses)
-                solver.append_formula(new_clauses)
-                seen_clauses.update(new_clauses)
+                solver.append_formula(_new_bandwidth_clauses(graph, k, encoding))
+                if encoding == "pairwise":
+                    num_clauses += 2 * graph.m * (graph.n - k - 1)
+                else:
+                    num_clauses += 2 * graph.m * (graph.n - k)
+                decision = replace(decision, k=k)
                 build_seconds = perf_counter() - build_start
                 if on_phase is not None:
-                    on_phase("build_end", k, build_seconds, decision.num_vars, len(seen_clauses))
+                    on_phase("build_end", k, build_seconds, decision.num_vars, num_clauses)
 
             if on_phase is not None:
                 on_phase("solve_start", k, 0.0, None, None)
@@ -94,7 +129,7 @@ def optimize_incremental(
                     satisfiable=satisfiable,
                     bandwidth=bandwidth,
                     num_variables=decision.num_vars,
-                    num_clauses=len(seen_clauses),
+                    num_clauses=num_clauses,
                     build_seconds=build_seconds,
                     solve_seconds=solve_seconds,
                 )

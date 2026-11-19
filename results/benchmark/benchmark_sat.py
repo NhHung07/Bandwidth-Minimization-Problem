@@ -19,7 +19,7 @@ from time import perf_counter
 import psutil
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from src.graph import list_instance_paths, load_graph
@@ -90,7 +90,7 @@ def run_case(path: Path, config: tuple[str, str, str], time_limit: float,
 
     with tempfile.TemporaryDirectory(prefix="bmp-sat-", ignore_cleanup_errors=True) as folder:
         events_path = Path(folder) / "events.jsonl"
-        command = [sys.executable, str(ROOT / "scripts" / "benchmark_sat_worker.py"),
+        command = [sys.executable, str(ROOT / "results" / "benchmark" / "benchmark_sat_worker.py"),
                    str(path), method, encoding, str(events_path)]
         start = perf_counter()
         deadline = start + time_limit
@@ -215,7 +215,7 @@ def code_hash() -> str:
     """Băm các file thuật toán và bộ chạy đang dùng."""
     code = hashlib.sha256()
     sources = sorted((ROOT / "src").rglob("*.py"))
-    sources += [ROOT / "scripts" / "benchmark_sat.py", ROOT / "scripts" / "benchmark_sat_worker.py"]
+    sources += [ROOT / "results" / "benchmark" / "benchmark_sat.py", ROOT / "results" / "benchmark" / "benchmark_sat_worker.py"]
     for path in sources:
         code.update(path.relative_to(ROOT).as_posix().encode())
         code.update(path.read_bytes())

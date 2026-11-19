@@ -15,11 +15,11 @@ from pathlib import Path
 from time import perf_counter
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from scripts.benchmark_amo import FIELDS, append_row, check_manifest, load_completed
-from scripts.benchmark_sat import read_events, stop_tree, tree_rss
+from results.benchmark.benchmark_amo import FIELDS, append_row, check_manifest, load_completed
+from results.benchmark.benchmark_sat import read_events, stop_tree, tree_rss
 from src.graph import list_instance_paths, load_graph
 from src.verify import verify_solution
 
@@ -45,7 +45,7 @@ def run_case(path: Path, config: tuple[str, str, str, str], time_limit: float,
 
     with tempfile.TemporaryDirectory(prefix="bmp-group1-", ignore_cleanup_errors=True) as folder:
         events_path = Path(folder) / "events.jsonl"
-        command = [sys.executable, str(ROOT / "scripts" / "benchmark_group1_worker.py"),
+        command = [sys.executable, str(ROOT / "results" / "benchmark" / "benchmark_group1_worker.py"),
                    str(path), encoding, method, cardinality, str(events_path)]
         start = perf_counter()
         deadline = start + time_limit
@@ -140,7 +140,7 @@ def code_hash() -> str:
     """Băm thuật toán và mọi file thực thi mà lượt đo phụ thuộc."""
     digest = hashlib.sha256()
     sources = sorted((ROOT / "src").rglob("*.py"))
-    sources += [ROOT / "scripts" / name for name in
+    sources += [ROOT / "results" / "benchmark" / name for name in
                 ("benchmark_sat.py", "benchmark_amo.py", "benchmark_group1.py",
                  "benchmark_group1_worker.py")]
     for path in sources:
