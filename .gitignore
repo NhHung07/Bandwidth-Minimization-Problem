@@ -21,4 +21,5 @@ venv/
 
 # Local notes and reference documents (in every directory)
 *.md
+!README.md
 *.pdf
