@@ -1,8 +1,13 @@
 # SAT Solver & Constraint Programming (CP-SAT)
 python-sat>=1.9.dev15
 ortools>=9.15
+psutil>=5.9  # Giám sát RAM của tiến trình benchmark SAT
 
 # Commercial MIP & CP Solvers
 gurobipy>=11.0.0
 docplex>=2.25.0
 cplex>=22.1.0
+
+# Trực quan hóa kết quả AMO trong Jupyter Notebook
+cnsplots==0.8.0
+ipykernel>=7.0

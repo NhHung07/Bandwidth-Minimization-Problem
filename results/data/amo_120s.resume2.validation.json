@@ -1,0 +1,12 @@
+{
+  "rows": 565,
+  "expected": 565,
+  "missing": 0,
+  "statuses": {
+    "FEASIBLE": 464,
+    "OPTIMAL": 23,
+    "ERROR": 78
+  },
+  "time_limit_seconds": 120.0,
+  "memory_limit_gb": 8.0
+}
