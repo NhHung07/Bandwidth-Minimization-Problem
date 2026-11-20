@@ -17,6 +17,7 @@ venv/
 
 # Tool Config
 .antigravity/
+.vscode/
 
 # Local notes and reference documents (in every directory)
 *.md
