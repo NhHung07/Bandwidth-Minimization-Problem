@@ -192,21 +192,3 @@ xelatex bmp_report.tex  # Chạy 2 lần để cập nhật cross-references
 3. **So sánh Solvers**:
    * **IBM CPLEX CP Optimizer** và **Google OR-Tools CP-SAT** thể hiện hiệu năng tìm nghiệm khả thi rất mạnh trên các đồ thị cỡ lớn.
    * **Incremental SAT** cho khả năng chứng minh cận dưới và thu hẹp gap nhanh chóng ở các đồ thị có cấu trúc đặc thù.
-
----
-
-## 7. Thành viên Thực hiện & Phân công Công việc
-
-Dự án được thực hiện bởi nhóm sinh viên Khoa Công nghệ Thông tin, Trường Đại học Công nghệ (UET - VNU):
-
-| Thành viên | Tài khoản GitHub | Phân công nhiệm vụ chính |
-| :--- | :--- | :--- |
-| **Phạm Đức Hùng** | `@Pham-Duc-Hung` | Nghiên cứu và cài đặt các SAT Encodings (Pairwise, Order), 5 kỹ thuật AMO, tiền xử lý đồ thị và hoàn thiện báo cáo LaTeX. |
-| **Trần Nhật Hưng** | [`@NhHung07`](https://github.com/NhHung07) | Nghiên cứu, mô hình hóa và cài đặt các **Exact Solvers** (Google CP-SAT, Gurobi MIP, CPLEX CP, CPLEX MIP), kịch bản benchmark và trực quan hóa kết quả Nhóm 3. |
-| **Phạm Hồng Nam** | `@phamnam` | Nghiên cứu cấu trúc dữ liệu, thu thập và tiền xử lý bộ dữ liệu Harwell-Boeing, kiểm nghiệm nghiệm (Verification) và đánh giá thực nghiệm. |
-
----
-
-## 8. Giấy phép (License)
-Dự án được phát triển phục vụ mục đích nghiên cứu và học tập trong khuôn khổ học phần Các vấn đề hiện đại trong Khoa học Máy tính.
-Mã nguồn được lưu trữ tại: [GitHub Repository](https://github.com/NhHung07/Bandwidth-Minimization-Problem).
