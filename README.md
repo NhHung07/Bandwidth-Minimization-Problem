@@ -166,9 +166,9 @@ python results/benchmark/benchmark_group1.py
 
 ### 5.3. Trực quan hóa và Phân tích Dữ liệu
 Các Jupyter Notebook trong `results/visualization/notebooks/` cung cấp phân tích chi tiết:
-* `group3_visualization.ipynb`: Đọc [group3_official_strong_lb_120s.csv](file:///home/hung/code/BMP/results/data/group3_official_strong_lb_120s.csv), vẽ biểu đồ so sánh chất lượng nghiệm, khoảng cách tương đối (Relative Gap), thời gian giải và mức tiêu thụ RAM giữa các Solver.
-* `amo_visualization.ipynb`: Đọc [amo_120s.csv](file:///home/hung/code/BMP/results/data/amo_120s.csv), đánh giá số lượng biến/mệnh đề phụ sinh ra và ảnh hưởng đến thời gian giải.
-* `group1_visualization.ipynb`: Đọc [group1_product_120s.csv](file:///home/hung/code/BMP/results/data/group1_product_120s.csv), so sánh tỷ lệ giải thành công và tốc độ hội tụ của Incremental SAT.
+* [`group3_visualization.ipynb`](results/visualization/notebooks/group3_visualization.ipynb): Đọc [`group3_official_strong_lb_120s.csv`](results/data/group3_official_strong_lb_120s.csv), vẽ biểu đồ trạng thái giải, Performance Profile chất lượng nghiệm, khoảng cách tương đối (Relative Gap) và mức tiêu thụ RAM đỉnh giữa 5 Solver.
+* [`amo_visualization.ipynb`](results/visualization/notebooks/amo_visualization.ipynb): Đọc [`amo_120s.csv`](results/data/amo_120s.csv), thống kê số lần đạt bandwidth tốt nhất, số lượt chứng minh `OPTIMAL` và vẽ Performance Profile so sánh 5 kỹ thuật AMO.
+* [`group1_visualization.ipynb`](results/visualization/notebooks/group1_visualization.ipynb): Đọc [`group1_product_120s.csv`](results/data/group1_product_120s.csv), so sánh phân bố trạng thái, Performance Profile và chất lượng `bandwidth` giữa Repeated SAT và Incremental SAT trên hai mã hóa Pairwise + Product và Order.
 
 ### 5.4. Biên dịch Báo cáo LaTeX
 Báo cáo khoa học hoàn chỉnh được viết bằng LaTeX chuẩn định dạng Elsevier CAS (`cas-sc`):
